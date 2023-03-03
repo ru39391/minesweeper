@@ -1,0 +1,44 @@
+{
+  "name": "my-webpack-boilerplate",
+  "version": "2.0.0",
+  "description": "[Профиль на github.com](https://github.com/ru39391)",
+  "main": "webpack.common.js",
+  "scripts": {
+    "dev": "webpack serve --node-env=development",
+    "build": "webpack --node-env=production",
+    "deploy": "gh-pages -d dist"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ru39391/my-webpack-boilerplate.git"
+  },
+  "author": "tg:vladimir_wd",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ru39391/my-webpack-boilerplate/issues"
+  },
+  "homepage": "https://github.com/ru39391/my-webpack-boilerplate#readme",
+  "devDependencies": {
+    "@babel/core": "^7.21.0",
+    "@babel/preset-env": "^7.20.2",
+    "babel-loader": "^9.1.2",
+    "css-loader": "^6.7.3",
+    "css-minimizer-webpack-plugin": "^4.2.2",
+    "fs": "^0.0.1-security",
+    "gh-pages": "^5.0.0",
+    "html-webpack-plugin": "^5.5.0",
+    "mini-css-extract-plugin": "^2.7.2",
+    "postcss-loader": "^7.0.2",
+    "postcss-preset-env": "^8.0.1",
+    "pug-loader": "^2.4.0",
+    "sass-loader": "^13.2.0",
+    "svg-sprite-loader": "^6.0.11",
+    "terser-webpack-plugin": "^5.3.6",
+    "webpack": "^5.75.0",
+    "webpack-cli": "^5.0.1",
+    "webpack-dev-server": "^4.11.1"
+  },
+  "dependencies": {
+    "modern-css-reset": "^1.4.0"
+  }
+}
