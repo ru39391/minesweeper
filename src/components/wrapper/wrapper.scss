@@ -2,3 +2,19 @@
   @extend %d-flex-centered;
   @include offset(0 0 48px,0 16px);
 }
+
+.minesweeper__wrapper {
+  display: grid;
+  grid-gap: 4px;
+  grid-template-columns: repeat(16,24px);
+}
+
+.minesweeper__cell {
+  height: 24px;
+  background-color: #fff;
+}
+
+.minesweeper__cell_type_mine {
+  color: #fff;
+  background-color: #f00;
+}
