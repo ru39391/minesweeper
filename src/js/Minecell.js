@@ -12,13 +12,15 @@ export class Minecell {
     this._cellClassName = cellClassName;
     this._mineClassName = mineClassName;
 
-    this._initCellIndex = null;
+    this._initCellIdx = null;
     this._cellElemsArr = [];
     this._cellRowLength = Boolean(cellRowLength) ? Number(cellRowLength) : Number(CELL_ROW_LENGTH);
     this._cellsArrLength = Math.pow(this._cellRowLength, 2);
 
     this._mineElemsArr = [];
     this._minesArrLength = Boolean(minesLength) ? Number(minesLength) : Number(MINES_LENGTH);
+
+    this._emptyCellsDataArr = [];
 
     this._isInit = false;
     this._setInitActive = this._setInitActive.bind(this);
@@ -50,7 +52,7 @@ export class Minecell {
     };
   }
 
-  _getSiblingsIndex(target) {
+  _getSiblingsIdx(target) {
     const positions = {
       top: target - this._cellRowLength,
       right: target + 1,
@@ -89,68 +91,65 @@ export class Minecell {
     console.log(`is target in arr: `, this._mineElemsArr.includes(target));
     //console.log(sideSiblingsArr.filter(item => item !== null).flat());
     return {
-      siblingsIndexArr: sideSiblingsArr.filter(item => item !== null).flat()
+      siblingsIdxArr: sideSiblingsArr.filter(item => item !== null).flat()
     }
-  }
-
-  _isSiblingsEmpty(arr) {
-    const array = this._getElemsArr(arr).filter(item => this._mineElemsArr.includes(item));
-    console.log(`sibling mines: `, array.length);
-    return !Boolean(array.length);
   }
 
   _setEmptyCells(arr) {
-    const array = arr.map((item) => {
-      const { siblingsIndexArr } = this._getSiblingsIndex(item);
-      return siblingsIndexArr.filter((item) => !arr.includes(item));
-    }).flat();
-    const { filtredArr } = this._getDiffElems(array);
+    const emptyCellsArr = this._cellElemsArr.filter((item, index) => !arr.includes(index));
 
-    const myarr = filtredArr.map((item, index, arr) => {
+    this._emptyCellsDataArr = emptyCellsArr.map((item) => {
+      const emptyCellIdx = this._cellElemsArr.indexOf(item);
+      const { siblingsIdxArr } = this._getSiblingsIdx(emptyCellIdx);
       return {
-        item,
-        counter: arr.filter((el) => el === item).length
+        idx: emptyCellIdx,
+        minesCounter: siblingsIdxArr.filter(item => arr.includes(item)).length,
+      };
+    });
+
+    /**/
+    this._emptyCellsDataArr.forEach((item) => {
+      const { idx, minesCounter } = item;
+      if(minesCounter) {
+        this._cellElemsArr[idx].textContent = minesCounter.toString();
+        this._cellElemsArr[idx].style = `color:#000;background-color:#ccc;`;
       }
     });
-    myarr.forEach((el) => {
-      const { item, counter } = el;
-      this._cellElemsArr[item].textContent = counter.toString();
-      this._cellElemsArr[item].style = `background-color:#000;color:#fff;`;
-    });
-
-    console.log(myarr);
   }
 
-  _setRandIndexArr() {
+  _isSiblingsEmpty(target = this._initCellIdx) {
+    const { minesCounter } = this._emptyCellsDataArr.find(item => item.idx === target);
+    return !Boolean(minesCounter);
+  }
+
+  _createRandIdxArr() {
     const multiplier = this._cellsArrLength - 1;
-    const indexArr = [];
+    const idxArr = [];
     let i = 0;
     while (i < this._cellsArrLength) {
-      indexArr.push(Math.round(Math.random() * multiplier));
+      idxArr.push(Math.round(Math.random() * multiplier));
       i++;
     }
 
-    const initCellIndex = indexArr.indexOf(this._initCellIndex);
-    if(indexArr.includes(this._initCellIndex)) {
-      indexArr.splice(initCellIndex, 1);
+    const initCellIdx = idxArr.indexOf(this._initCellIdx);
+    if(idxArr.includes(this._initCellIdx)) {
+      idxArr.splice(initCellIdx, 1);
     }
 
-    console.log(`init index`, this._initCellIndex);
-    console.log(`init index in rand arr: `, initCellIndex);
-    const { filtredArr } = this._getDiffElems(indexArr);
+    console.log(`init index`, this._initCellIdx);
+    console.log(`init index in rand arr: `, initCellIdx);
+    const { filtredArr } = this._getDiffElems(idxArr);
     return {
-      randIndexArr: filtredArr.filter((item, index) => index < this._minesArrLength)
+      randidxArr: filtredArr.filter((item, index) => index < this._minesArrLength)
     }
   }
 
   _setElemsType() {
-    const { randIndexArr } = this._setRandIndexArr();
-    const { siblingsIndexArr } = this._getSiblingsIndex(this._initCellIndex);
+    const { randidxArr } = this._createRandIdxArr();
 
-    this._mineElemsArr = this._getElemsArr(randIndexArr);
-    this._isSiblingsEmpty(siblingsIndexArr);
-    this._setEmptyCells(randIndexArr);
-
+    this._mineElemsArr = this._getElemsArr(randidxArr);
+    this._setEmptyCells(randidxArr);
+    this._isSiblingsEmpty();
 
     this._mineElemsArr.forEach((item) => {
       item.classList.add(this._mineClassName);
@@ -163,7 +162,7 @@ export class Minecell {
 
     if(!this._isInit) {
       this._isInit = !this._isInit;
-      this._initCellIndex = this._cellElemsArr.indexOf(target);
+      this._initCellIdx = this._cellElemsArr.indexOf(target);
       this._cellElemsArr.forEach((item) => {
         item.removeEventListener('click', this._setInitActive);
       });
