@@ -23,6 +23,7 @@ export class Minecell {
     this._emptyCellsDataArr = [];
 
     this._isInit = false;
+    this._setActive = this._setActive.bind(this);
     this._setInitActive = this._setInitActive.bind(this);
   }
 
@@ -36,12 +37,16 @@ export class Minecell {
     return el;
   }
 
+  _setStyleParams(idx, length) {
+    this._cellElemsArr[idx].textContent = length.toString();
+    this._cellElemsArr[idx].classList.add('minesweeper__cell_active');
+  }
+
   _getElemsArr(arr) {
     return arr.map(item => this._cellElemsArr[item]);
   }
 
   _getDiffElems(arr) {
-    //console.log(arr.length, filtredArr.length, filtredArr.filter((item, index) => index < this._minesArrLength).length);
     return {
       filtredArr: arr.reduce((acc, item) => {
         if(acc.find(ind => ind === item)) {
@@ -89,7 +94,6 @@ export class Minecell {
     });
 
     console.log(`is target in arr: `, this._mineElemsArr.includes(target));
-    //console.log(sideSiblingsArr.filter(item => item !== null).flat());
     return {
       siblingsIdxArr: sideSiblingsArr.filter(item => item !== null).flat()
     }
@@ -106,20 +110,34 @@ export class Minecell {
         minesCounter: siblingsIdxArr.filter(item => arr.includes(item)).length,
       };
     });
-
-    /**/
-    this._emptyCellsDataArr.forEach((item) => {
-      const { idx, minesCounter } = item;
-      if(minesCounter) {
-        this._cellElemsArr[idx].textContent = minesCounter.toString();
-        this._cellElemsArr[idx].style = `color:#000;background-color:#ccc;`;
-      }
-    });
   }
 
-  _isSiblingsEmpty(target = this._initCellIdx) {
+  _isSiblingsEmpty(target) {
     const { minesCounter } = this._emptyCellsDataArr.find(item => item.idx === target);
-    return !Boolean(minesCounter);
+    return {
+      targetCounter: minesCounter,
+      isSiblingsEmpty: !Boolean(minesCounter)
+    };
+  }
+
+  _handleCells(target = this._initCellIdx) {
+    const { siblingsIdxArr } = this._getSiblingsIdx(target);
+    const { isSiblingsEmpty, targetCounter } = this._isSiblingsEmpty(target);
+
+    if(isSiblingsEmpty) {
+      const emptyCellsDataArr = siblingsIdxArr.map((item) => {
+        return this._emptyCellsDataArr.find(data => data.idx === item);
+      });
+
+      emptyCellsDataArr.forEach((item) => {
+        const { idx, minesCounter } = item;
+        if(minesCounter) {
+          this._setStyleParams(idx, minesCounter);
+        }
+      });
+    } else {
+      this._setStyleParams(target, targetCounter);
+    }
   }
 
   _createRandIdxArr() {
@@ -149,11 +167,21 @@ export class Minecell {
 
     this._mineElemsArr = this._getElemsArr(randidxArr);
     this._setEmptyCells(randidxArr);
-    this._isSiblingsEmpty();
+    this._handleCells()
 
     this._mineElemsArr.forEach((item) => {
       item.classList.add(this._mineClassName);
     });
+  }
+
+  _setActive(e) {
+    const { target } = e;
+
+    if(this._isInit) {
+      console.log(target);
+      //this._handleCells(target);
+      //target.removeEventListener('click', this._setActive);
+    }
   }
 
   _setInitActive(e) {
@@ -171,6 +199,10 @@ export class Minecell {
     console.log(`isInit after: `, this._isInit);
   }
 
+  _setEventListeners(el) {
+    el.addEventListener('click', this._setActive);
+  }
+
   _initEvents(el) {
     el.addEventListener('click', this._setInitActive);
   }
@@ -186,6 +218,7 @@ export class Minecell {
       cellEl.textContent = i.toString();
       this._cellElemsArr.push(cellEl);
       this._initEvents(cellEl);
+      //this._setEventListeners(cellEl);
       i++;
     }
   }
