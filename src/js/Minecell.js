@@ -41,23 +41,17 @@ export class Minecell {
     }, []);
 
     console.log(arr.length, filtredArr.length, filtredArr.filter((item, index) => index < this._minesArrLength).length);
-
-    /*
-    console.log(array.map((item, index) => {
-    }));
-    */
-
     return filtredArr;
   }
 
-  _getSinbings(target) {
+  _getSiblings(target) {
     const positions = {
       top: target - this._cellSideLength,
       right: target + 1,
       bottom: target + this._cellSideLength,
       left: target - 1
     };
-    const { top, right, bottom, left } = positions;
+    const { top, right, bottom } = positions;
 
     const isSide = {
       isTopSide: !(top >= 0),
@@ -65,18 +59,28 @@ export class Minecell {
       isBottomSide: !(bottom < this._cellsArrLength),
       isLeftSide: !(target % this._cellSideLength),
     };
-    const { isTopSide, isRightSide, isBottomSide, isLeftSide } = isSide;
+    const { isRightSide, isLeftSide } = isSide;
 
-    const siblingsData = {
-      topSiblings: isTopSide ? !isTopSide : [top - 1, top, top + 1],
-      rightSiblings: isRightSide ? !isRightSide : right,
-      bottomSiblings: isBottomSide ? !isBottomSide : [bottom - 1, bottom, bottom + 1],
-      leftSiblings: isLeftSide ? !isLeftSide : left
+    const filtredSiblings = (siblingsArr) => {
+      return siblingsArr.filter((item, index, arr) => {
+        if(isRightSide) {
+          return index !== arr.length - 1;
+        } else if(isLeftSide) {
+          return index !== 0;
+        }
+        return arr;
+      });
     };
 
-    console.log(Object.values(isSide).map((item, index) => {
-      return item ? !item : Object.values(siblingsData)[index];
-    }));
+    const getSiblings = (data, index, siblings) => {
+      return Object.values(data)[index] ? null : siblings
+    };
+
+    const siblingsArr = Object.values(positions).map((item, index) => {
+      return [0,2].includes(index) ? getSiblings(isSide, index, filtredSiblings([item - 1, item, item + 1])) : getSiblings(isSide, index, item);
+    });
+
+    console.log(siblingsArr.filter(item => item !== null).flat());
   }
 
   _setRandIndexArr() {
@@ -100,7 +104,7 @@ export class Minecell {
 
   _setElemsType() {
     this._mineElemsArr = this._setRandIndexArr().map(item => this._cellElemsArr[item]);
-    this._getSinbings(this._initCellIndex);
+    this._getSiblings(this._initCellIndex);
 
 
     this._mineElemsArr.forEach((item) => {
