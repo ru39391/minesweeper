@@ -8,7 +8,7 @@ const mineCell = new Minecell({
   wrapperEl,
   cellClassName: 'minesweeper__cell',
   mineClassName: 'minesweeper__cell_type_mine',
-  cellSideLength: 16,
+  cellRowLength: 16,
   minesLength: 40
 });
 //console.log(mineCell);
