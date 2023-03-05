@@ -37,12 +37,12 @@ export class Minecell {
   }
 
   _setStyleParams(idx, length) {
-    this._cellElemsArr[idx].textContent = length.toString();
+    this._cellElemsArr[idx].textContent = length > 0 ? length.toString() : '';
     this._cellElemsArr[idx].classList.add('minesweeper__cell_active');
   }
 
   _getElem(idx) {
-    return this._cellElemsArr.find(item => item === idx);
+    return this._cellElemsArr.find((item, index) => index === idx);
   }
 
   _getElemsArr(idxArr) {
@@ -58,6 +58,28 @@ export class Minecell {
         return [...acc, item];
       }, [])
     };
+  }
+
+  _createRandIdxArr() {
+    const multiplier = this._cellsArrLength - 1;
+    const idxArr = [];
+    let i = 0;
+    while (i < this._cellsArrLength) {
+      idxArr.push(Math.round(Math.random() * multiplier));
+      i++;
+    }
+
+    const initCellIdx = idxArr.indexOf(this._initCellIdx);
+    if(idxArr.includes(this._initCellIdx)) {
+      idxArr.splice(initCellIdx, 1);
+    }
+
+    console.log(`init index`, this._initCellIdx);
+    console.log(`init index in rand arr: `, initCellIdx);
+    const { filtredArr } = this._getDiffIdxArr(idxArr);
+    return {
+      randIdxArr: filtredArr.filter((item, index) => index < this._minesArrLength)
+    }
   }
 
   _getSiblingsIdx(targetIdx) {
@@ -126,6 +148,9 @@ export class Minecell {
     const { siblingsIdxArr } = this._getSiblingsIdx(targetIdx);
     const { isSiblingsEmpty, targetIdxCounter } = this._isSiblingsEmpty(targetIdx);
 
+    this._setStyleParams(targetIdx, targetIdxCounter);
+    this._getElem(targetIdx).removeEventListener('click', this._setCellHandled);
+
     if(isSiblingsEmpty) {
       const emptyCellsDataArr = siblingsIdxArr.map((item) => {
         return this._emptyCellsDataArr.find(data => data.idx === item);
@@ -133,36 +158,9 @@ export class Minecell {
 
       emptyCellsDataArr.forEach((item) => {
         const { idx, minesCounter } = item;
-        if(minesCounter) {
-          this._setStyleParams(idx, minesCounter);
-          //this._getElem(idx).removeEventListener('click', this._setCellHandled);
-        }
+        this._setStyleParams(idx, minesCounter);
+        this._getElem(idx).removeEventListener('click', this._setCellHandled);
       });
-    } else {
-      this._setStyleParams(targetIdx, targetIdxCounter);
-      //this._getElem(targetIdx).removeEventListener('click', this._setCellHandled);
-    }
-  }
-
-  _createRandIdxArr() {
-    const multiplier = this._cellsArrLength - 1;
-    const idxArr = [];
-    let i = 0;
-    while (i < this._cellsArrLength) {
-      idxArr.push(Math.round(Math.random() * multiplier));
-      i++;
-    }
-
-    const initCellIdx = idxArr.indexOf(this._initCellIdx);
-    if(idxArr.includes(this._initCellIdx)) {
-      idxArr.splice(initCellIdx, 1);
-    }
-
-    console.log(`init index`, this._initCellIdx);
-    console.log(`init index in rand arr: `, initCellIdx);
-    const { filtredArr } = this._getDiffIdxArr(idxArr);
-    return {
-      randIdxArr: filtredArr.filter((item, index) => index < this._minesArrLength)
     }
   }
 
@@ -181,14 +179,13 @@ export class Minecell {
 
   _setCellHandled(e) {
     const { target } = e;
-    //const isCellEmpty = this._emptyCellsDataArr.find(item => item.idx === currCellIdx);
 
-    if(this._mineElemsArr.length) {
-      console.log(target);
-
+    if(this._mineElemsArr.length && !this._mineElemsArr.includes(target)) {
       const currCellIdx = this._cellElemsArr.indexOf(target);
       this._handleCells(currCellIdx);
-      target.removeEventListener('click', this._setCellHandled);
+      console.log('empty cell');
+    } else {
+      console.log('mine');
     }
   }
 
@@ -199,7 +196,6 @@ export class Minecell {
     if(!this._mineElemsArr.length) {
       this._initCellIdx = this._cellElemsArr.indexOf(target);
       this._setElemsType();
-      target.removeEventListener('click', this._setCellHandled);
 
       this._cellElemsArr.forEach((item) => {
         item.removeEventListener('click', this._setInit);
