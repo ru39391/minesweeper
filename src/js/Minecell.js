@@ -22,7 +22,6 @@ export class Minecell {
 
     this._emptyCellsDataArr = [];
 
-    this._isInit = false;
     this._setActive = this._setActive.bind(this);
     this._setInitActive = this._setInitActive.bind(this);
   }
@@ -169,6 +168,7 @@ export class Minecell {
     this._setEmptyCells(randidxArr);
     this._handleCells()
 
+    /**/
     this._mineElemsArr.forEach((item) => {
       item.classList.add(this._mineClassName);
     });
@@ -177,7 +177,7 @@ export class Minecell {
   _setActive(e) {
     const { target } = e;
 
-    if(this._isInit) {
+    if(this._mineElemsArr.length) {
       console.log(target);
       //this._handleCells(target);
       //target.removeEventListener('click', this._setActive);
@@ -185,18 +185,19 @@ export class Minecell {
   }
 
   _setInitActive(e) {
-    console.log(`isInit before: `, this._isInit);
+    console.log(`isInit before: `, Boolean(this._mineElemsArr.length));
     const { target } = e;
 
-    if(!this._isInit) {
-      this._isInit = !this._isInit;
+    if(!this._mineElemsArr.length) {
       this._initCellIdx = this._cellElemsArr.indexOf(target);
+      target.removeEventListener('click', this._setActive);
+
       this._cellElemsArr.forEach((item) => {
         item.removeEventListener('click', this._setInitActive);
       });
       this._setElemsType();
     };
-    console.log(`isInit after: `, this._isInit);
+    console.log(`isInit after: `, Boolean(this._mineElemsArr.length));
   }
 
   _setEventListeners(el) {
@@ -218,7 +219,7 @@ export class Minecell {
       cellEl.textContent = i.toString();
       this._cellElemsArr.push(cellEl);
       this._initEvents(cellEl);
-      //this._setEventListeners(cellEl);
+      this._setEventListeners(cellEl);
       i++;
     }
   }
