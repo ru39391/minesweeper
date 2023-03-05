@@ -1,0 +1,7 @@
+const CELL_ROW_LENGTH = 16;
+const MINES_LENGTH = 40;
+
+export {
+  CELL_ROW_LENGTH,
+  MINES_LENGTH
+};
