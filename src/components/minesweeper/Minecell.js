@@ -1,4 +1,4 @@
-import { CELL_ROW_LENGTH, MINES_LENGTH } from './utils/constants';
+import { CELL_ROW_LENGTH, MINES_LENGTH } from '../../js/utils/constants';
 
 export class Minecell {
   constructor({
@@ -20,6 +20,8 @@ export class Minecell {
     this._mineElemsArr = [];
     this._minesArrLength = Boolean(minesLength) ? Number(minesLength) : Number(MINES_LENGTH);
 
+    this._emptyCellsCounter = this._cellsArrLength - this._minesArrLength;
+    this._emptyCellsArr = [];
     this._emptyCellsDataArr = [];
 
     this._markedCellsArr = [];
@@ -61,10 +63,10 @@ export class Minecell {
     return idxArr.map(item => this._cellElemsArr[item]);
   }
 
-  _getDiffIdxArr(idxArr) {
+  _getDiffItemsArr(itemsArr) {
     return {
-      diffIdxArr: idxArr.reduce((acc, item) => {
-        if(acc.find(ind => ind === item)) {
+      diffItemsArr: itemsArr.reduce((acc, item) => {
+        if(acc.find(accItem => accItem === item)) {
           return acc;
         }
         return [...acc, item];
@@ -88,9 +90,9 @@ export class Minecell {
 
     console.log(`init index`, this._initCellIdx);
     console.log(`init index in rand arr: `, initCellIdx);
-    const { diffIdxArr } = this._getDiffIdxArr(idxArr);
+    const { diffItemsArr } = this._getDiffItemsArr(idxArr);
     return {
-      randIdxArr: diffIdxArr.filter((item, index) => index < this._minesArrLength)
+      randIdxArr: diffItemsArr.filter((item, index) => index < this._minesArrLength)
     }
   }
 
@@ -161,6 +163,7 @@ export class Minecell {
     const { isSiblingsEmpty, targetIdxCounter } = this._isSiblingsEmpty(targetIdx);
 
     this._setStyleParams(targetIdx, targetIdxCounter);
+    this._emptyCellsArr.push(targetIdx);
     this._getElem(targetIdx).removeEventListener('click', this._setCellOpened);
     this._getElem(targetIdx).removeEventListener('mousedown', this._setCellMarked);
 
@@ -173,10 +176,18 @@ export class Minecell {
         const { idx, minesCounter } = item;
         this._setStyleParams(idx, minesCounter);
 
+        this._emptyCellsArr.push(idx);
         this._getElem(idx).removeEventListener('click', this._setCellOpened);
         this._getElem(idx).removeEventListener('mousedown', this._setCellMarked);
       });
     }
+
+    /**/
+    const { diffItemsArr } = this._getDiffItemsArr(this._emptyCellsArr);
+    console.log(diffItemsArr.length, this._emptyCellsCounter, diffItemsArr.length === this._emptyCellsCounter);
+    if(diffItemsArr.length === this._emptyCellsCounter) {
+      alert('!!!!!!!!!!!!!!!!');
+    };
   }
 
   _setElemsType() {
@@ -198,7 +209,8 @@ export class Minecell {
     if(this._mineElemsArr.length && !this._mineElemsArr.includes(target)) {
       const currCellIdx = this._getIdx(target);
       this._openCells(currCellIdx);
-      console.log('empty cell');
+
+      //console.log('empty cell');
     } else {
       console.log('mine');
     }
@@ -206,7 +218,7 @@ export class Minecell {
 
   _markCells(e) {
     const { target } = e;
-    const targetIdx = this._getIdx(target);
+    const classList = target.classList;
     const checkedCounter = this._markedCellsArr.filter(item => item === target).length;
     const checkedCellsArr = {
       markedCellsKey: '_markedCellsArr',
@@ -219,27 +231,38 @@ export class Minecell {
 
     switch(checkedCounter) {
       case 0:
-        console.log(targetIdx, 'установили флажок');
+        //console.log(targetIdx, 'установили флажок');
         this._markedCellsArr.push(target);
+
+        classList.add('minesweeper__cell_type_marked');
         break;
 
       case 1:
-        console.log(targetIdx, 'установили вопрос');
+        //console.log(targetIdx, 'установили вопрос');
         Object.values(checkedCellsArr).forEach((key) => {
           this[key].push(target);
         });
+
+        classList.add('minesweeper__cell_type_spotted');
         break;
 
       case 2:
-        console.log(targetIdx, 'сняли выделение');
+        //console.log(targetIdx, 'сняли выделение');
         Object.values(checkedCellsArr).forEach((key) => {
           const arr = this[key].map((item) => {
             return item === target ? null : item;
           });
           this[key] = arr.filter(item => item !== null);
         });
+
+        classList.remove('minesweeper__cell_type_marked');
+        classList.remove('minesweeper__cell_type_spotted');
+
         break;
     }
+
+    const { diffItemsArr } = this._getDiffItemsArr(this._markedCellsArr);
+    document.querySelector('h1').textContent = diffItemsArr.length;
 
     //console.log(this._getIdxArr(this._markedCellsArr), this._getIdxArr(this._spottedCellsArr), checkedCounter);
   }
@@ -285,6 +308,23 @@ export class Minecell {
     el.addEventListener('click', this._setInit);
   }
 
+  _reset() {
+    const keysData = {
+      cellElemsArr: '_cellElemsArr',
+      mineElemsArr: '_mineElemsArr',
+      emptyCellsArr: '_emptyCellsArr',
+      emptyCellsDataArr: '_emptyCellsDataArr',
+      markedCellsArr: '_markedCellsArr',
+      spottedCellsArr: '_spottedCellsArr',
+    };
+
+    this._initCellIdx = null;
+    Object.values(keysData).forEach((key) => {
+      this[key] = [];
+      console.log(this);
+    });
+  }
+
   init() {
     let i = 0;
     while (i < this._cellsArrLength) {
@@ -293,7 +333,7 @@ export class Minecell {
         className: this._cellClassName,
         parentEl: this._wrapperEl
       });
-      cellEl.textContent = i.toString();
+      //cellEl.textContent = i.toString();
       this._cellElemsArr.push(cellEl);
       this._initEvents(cellEl);
       this._setEventListeners(cellEl);

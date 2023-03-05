@@ -1,0 +1,78 @@
+:root {
+  --digit-offset: 9;
+}
+
+%ms-bg {
+  background-repeat: no-repeat;
+  background-image: url(../img/sprite.png);
+  background-color: rgba($color: #000000, $alpha: 0);
+}
+
+.minesweeper {
+  @include wh(288px,330px);
+  padding: 8px;
+  background-color: #c0c0c0;
+  box-shadow: 0 0 6px 0 rgba($color: #000000, $alpha: .4);
+}
+
+.minesweeper__header {
+  @extend %d-flex-nowrap;
+  @extend %d-flex-ai-center;
+  @include border(0 0 8px,#c0c0c0);
+  padding: 4px;
+  justify-content: space-between;
+  box-shadow: 0 0 6px 1px rgba($color: #000000, $alpha: .4) inset;
+}
+
+.minesweeper__btn {
+  @extend %ms-bg;
+  @include wh(25px);
+  @include fw(25px);
+  cursor: pointer;
+  background-position: 0 -25px;
+}
+
+.minesweeper__digit {
+  @extend %ms-bg;
+  @include wh(13px,24px);
+  @include fw(13px);
+  background-position: calc(-14px*var(--digit-offset)) 0;
+}
+
+.minesweeper__counter {
+  @extend %d-flex-nowrap
+}
+
+.minesweeper__timer {
+
+}
+
+.minesweeper__wrapper {
+  display: grid;
+  grid-gap: 0;
+  grid-template-columns: repeat(16,17px);
+  box-shadow: 0 0 6px 1px rgba($color: #000000, $alpha: .4) inset;
+}
+
+.minesweeper__cell {
+  @extend %ms-bg;
+  height: 17px;
+  background-position: 0 -50px;
+}
+
+.minesweeper__cell_type_mine {
+  color: #fff;
+  background-color: #f00;
+}
+
+.minesweeper__cell_active {
+  background-position: -17px -50px;
+}
+
+.minesweeper__cell_type_marked {
+  background-position: -34px -50px;
+}
+
+.minesweeper__cell_type_spotted {
+  background-position: -51px -50px;
+}
