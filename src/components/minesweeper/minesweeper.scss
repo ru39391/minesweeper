@@ -28,10 +28,19 @@
 
 .minesweeper__btn {
   @extend %ms-bg;
+  @extend %btn-default;
   @include wh(25px);
   @include fw(25px);
   cursor: pointer;
-  background-position: 0 -25px;
+  background-position: -1px -25px;
+}
+
+.minesweeper__btn_type_success {
+  background-position: -82px -25px;
+}
+
+.minesweeper__btn_type_fail {
+  background-position: -109px -25px;
 }
 
 .minesweeper__digit {

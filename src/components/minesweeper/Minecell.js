@@ -3,7 +3,9 @@ import { CELL_ROW_LENGTH, MINES_LENGTH } from '../../js/utils/constants';
 export class Minecell {
   constructor({
     wrapperEl,
-    togglerBtnSel,
+    btnClassName,
+    btnSuccessClassName,
+    btnFailClassName,
     cellClassName,
     cellMarkedClassName,
     cellSpottedClassName,
@@ -12,7 +14,12 @@ export class Minecell {
     minesLength
   }) {
     this._wrapperEl = wrapperEl;
-    this._togglerBtn = document.querySelector(togglerBtnSel);
+
+    this._btnClassName = btnClassName;
+    this._btnSuccessClassName = btnSuccessClassName;
+    this._btnFailClassName = btnFailClassName;
+    this._togglerBtn = document.querySelector(`.${this._btnClassName}`);
+
     this._cellClassName = cellClassName;
     this._cellMarkedClassName = cellMarkedClassName;
     this._cellSpottedClassName = cellSpottedClassName;
@@ -48,11 +55,11 @@ export class Minecell {
     return el;
   }
 
-  _resetClassList(el) {
+  _resetClassList(el, className = this._cellClassName) {
     const classListArr = Array.from(el.classList);
 
     for(let i = 0; i < classListArr.length; i++) {
-      if(classListArr[i] !== this._cellClassName) {
+      if(classListArr[i] !== className) {
         el.classList.remove(classListArr[i]);
       }
     };
@@ -202,12 +209,17 @@ export class Minecell {
         this._unsetEventListeners(this._getElem(idx));
       });
     }
+  }
 
-    /**/
+  _success() {
     const { diffItemsArr } = this._getDiffItemsArr(this._emptyCellsArr);
-    console.log(diffItemsArr.length, this._emptyCellsCounter, diffItemsArr.length === this._emptyCellsCounter);
+
     if(diffItemsArr.length === this._emptyCellsCounter) {
-      alert('!!!!!!!!!!!!!!!!');
+      this._togglerBtn.classList.add(this._btnSuccessClassName);
+      this._mineElemsArr.forEach((item) => {
+        this._unsetEventListeners(item);
+        this._setStyleParams(this._getIdx(item), 6, true)
+      });
     };
   }
 
@@ -234,6 +246,8 @@ export class Minecell {
     this._cellElemsArr.forEach((item) => {
       this._unsetEventListeners(item);
     });
+
+    this._togglerBtn.classList.add(this._btnFailClassName);
   }
 
   _setCellOpened(e) {
@@ -242,6 +256,7 @@ export class Minecell {
 
     if(this._mineElemsArr.length && !this._mineElemsArr.includes(target)) {
       this._openCells(currCellIdx);
+      this._success();
     } else {
       this._fail(target, currCellIdx);
     }
@@ -375,6 +390,7 @@ export class Minecell {
     });
 
     this.init();
+    this._resetClassList(this._togglerBtn, this._btnClassName);
   }
 
   init() {
