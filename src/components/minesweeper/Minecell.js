@@ -3,13 +3,19 @@ import { CELL_ROW_LENGTH, MINES_LENGTH } from '../../js/utils/constants';
 export class Minecell {
   constructor({
     wrapperEl,
+    togglerBtnSel,
     cellClassName,
+    cellMarkedClassName,
+    cellSpottedClassName,
     mineClassName,
     cellRowLength,
     minesLength
   }) {
     this._wrapperEl = wrapperEl;
+    this._togglerBtn = wrapperEl.querySelector(togglerBtnSel);
     this._cellClassName = cellClassName;
+    this._cellMarkedClassName = cellMarkedClassName;
+    this._cellSpottedClassName = cellSpottedClassName;
     this._mineClassName = mineClassName;
 
     this._initCellIdx = null;
@@ -42,12 +48,15 @@ export class Minecell {
     return el;
   }
 
-  _setStyleParams(idx, length) {
+  _setStyleParams(idx, length, isMine = false) {
     const offsets = {
       x: Boolean(length) ? length - 1 : 1,
       y: Boolean(length) ? 1 : length
     };
-    const { x, y} = offsets;
+    if(isMine) {
+      offsets.y = 0;
+    }
+    const { x, y } = offsets;
     this._cellElemsArr[idx].style = `--cell-offset-x:${x};--cell-offset-y:${y};`;
   }
 
@@ -166,10 +175,9 @@ export class Minecell {
     const { siblingsIdxArr } = this._getSiblingsIdx(targetIdx);
     const { isSiblingsEmpty, targetIdxCounter } = this._isSiblingsEmpty(targetIdx);
 
-    this._setStyleParams(targetIdx, targetIdxCounter);
     this._emptyCellsArr.push(targetIdx);
-    this._getElem(targetIdx).removeEventListener('click', this._setCellOpened);
-    this._getElem(targetIdx).removeEventListener('mousedown', this._setCellMarked);
+    this._setStyleParams(targetIdx, targetIdxCounter);
+    this._unsetEventListeners(this._getElem(targetIdx));
 
     if(isSiblingsEmpty) {
       const emptyCellsDataArr = siblingsIdxArr.map((item) => {
@@ -178,11 +186,10 @@ export class Minecell {
 
       emptyCellsDataArr.forEach((item) => {
         const { idx, minesCounter } = item;
-        this._setStyleParams(idx, minesCounter);
 
         this._emptyCellsArr.push(idx);
-        this._getElem(idx).removeEventListener('click', this._setCellOpened);
-        this._getElem(idx).removeEventListener('mousedown', this._setCellMarked);
+        this._setStyleParams(idx, minesCounter);
+        this._unsetEventListeners(this._getElem(idx));
       });
     }
 
@@ -207,16 +214,45 @@ export class Minecell {
     });
   }
 
+  _fail(elem, idx) {
+    const currElIdx = this._mineElemsArr.indexOf(elem);
+    const { diffItemsArr } = this._getDiffItemsArr(this._markedCellsArr);
+    const markedMinesArr = this._mineElemsArr.map((item) => {
+      return {
+        el: item,
+        isMarked: diffItemsArr.includes(item),
+      }
+    });
+
+    this._setStyleParams(idx, 7, true);elem
+    this._unsetEventListeners(this._getElem(idx));
+
+    markedMinesArr.splice(currElIdx, 1);
+    markedMinesArr.forEach((item) => {
+      const { el, isMarked } = item;
+      const index = this._getIdx(el);
+      const classListArr = Array.from(el.classList);
+
+      this._unsetEventListeners(el);
+
+      for(let i = 0; i < classListArr.length; i++) {
+        if(classListArr[i] !== this._cellClassName) {
+          el.classList.remove(classListArr[i]);
+        }
+      };
+
+      isMarked ? this._setStyleParams(index, 8, true) : this._setStyleParams(index, 6, true);
+    });
+  }
+
   _setCellOpened(e) {
     const { target } = e;
+    const currCellIdx = this._getIdx(target);
 
     if(this._mineElemsArr.length && !this._mineElemsArr.includes(target)) {
-      const currCellIdx = this._getIdx(target);
       this._openCells(currCellIdx);
-
-      //console.log('empty cell');
     } else {
-      console.log('mine');
+      this._fail(target, currCellIdx);
     }
   }
 
@@ -235,40 +271,31 @@ export class Minecell {
 
     switch(checkedCounter) {
       case 0:
-        //console.log(targetIdx, 'установили флажок');
         this._markedCellsArr.push(target);
-
-        classList.add('minesweeper__cell_type_marked');
+        classList.add(this._cellMarkedClassName);
         break;
 
       case 1:
-        //console.log(targetIdx, 'установили вопрос');
         Object.values(checkedCellsArr).forEach((key) => {
           this[key].push(target);
         });
-
-        classList.add('minesweeper__cell_type_spotted');
+        classList.add(this._cellSpottedClassName);
         break;
 
       case 2:
-        //console.log(targetIdx, 'сняли выделение');
         Object.values(checkedCellsArr).forEach((key) => {
           const arr = this[key].map((item) => {
             return item === target ? null : item;
           });
           this[key] = arr.filter(item => item !== null);
         });
-
-        classList.remove('minesweeper__cell_type_marked');
-        classList.remove('minesweeper__cell_type_spotted');
-
+        classList.remove(this._cellMarkedClassName);
+        classList.remove(this._cellSpottedClassName);
         break;
     }
 
     const { diffItemsArr } = this._getDiffItemsArr(this._markedCellsArr);
-    document.querySelector('h1').textContent = diffItemsArr.length;
-
-    //console.log(this._getIdxArr(this._markedCellsArr), this._getIdxArr(this._spottedCellsArr), checkedCounter);
+    //document.querySelector('h1').textContent = diffItemsArr.length;
   }
 
   _setCellMarked(e) {
@@ -282,7 +309,6 @@ export class Minecell {
 
         case 2:
           this._markCells(e);
-          //console.log('button', button);
           break;
       }
     }
@@ -301,6 +327,11 @@ export class Minecell {
       });
     };
     console.log(`isInit after: `, Boolean(this._mineElemsArr.length));
+  }
+
+  _unsetEventListeners(el) {
+    el.removeEventListener('click', this._setCellOpened);
+    el.removeEventListener('mousedown', this._setCellMarked);
   }
 
   _setEventListeners(el) {
