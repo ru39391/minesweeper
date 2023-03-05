@@ -128,8 +128,6 @@ export class Minecell {
       idxArr.splice(initCellIdx, 1);
     }
 
-    console.log(`init index`, this._initCellIdx);
-    console.log(`init index in rand arr: `, initCellIdx);
     const { diffItemsArr } = this._getDiffItemsArr(idxArr);
     return {
       randIdxArr: diffItemsArr.filter((item, index) => index < this._minesArrLength)
@@ -177,17 +175,19 @@ export class Minecell {
     }
   }
 
-  _setEmptyCells(randIdxArr) {
+  _getEmptyCellsDataArr(randIdxArr) {
     const emptyCellsArr = this._cellElemsArr.filter((item, index) => !randIdxArr.includes(index));
 
-    this._emptyCellsDataArr = emptyCellsArr.map((item) => {
-      const emptyCellIdx = this._getIdx(item);
-      const { siblingsIdxArr } = this._getSiblingsIdx(emptyCellIdx);
-      return {
-        idx: emptyCellIdx,
-        minesCounter: siblingsIdxArr.filter(item => randIdxArr.includes(item)).length,
-      };
-    });
+    return {
+      emptyCellsDataArr: emptyCellsArr.map((item) => {
+        const emptyCellIdx = this._getIdx(item);
+        const { siblingsIdxArr } = this._getSiblingsIdx(emptyCellIdx);
+        return {
+          idx: emptyCellIdx,
+          minesCounter: siblingsIdxArr.filter(item => randIdxArr.includes(item)).length,
+        };
+      })
+    };
   }
 
   _isSiblingsEmpty(targetIdx) {
@@ -311,16 +311,21 @@ export class Minecell {
     }
   }
 
-  _setDigits(digitWrappersArr, digitsArr) {
-    console.log(digitWrappersArr.length, digitsArr.length);
+  _resetCounters() {
+    this._counterDigitsArr.concat(this._timerDigitsArr).forEach((item) => {
+      item.removeAttribute('style');
+    });
+  }
 
+  _setDigits(digitWrappersArr, digitsArr) {
     while (digitsArr.length < digitWrappersArr.length) {
       digitsArr.unshift('0');
     }
 
     digitsArr.forEach((item, index) => {
-      const x = Boolean(Number(item)) ? item - 1 : '';
-      digitWrappersArr[index].style = `--digit-offset:${x};`;
+      const digit = Number(item);
+      const digitOffset = Boolean(digit) ? digit - 1 : 9;
+      digitWrappersArr[index].style = `--digit-offset:${digitOffset};`;
     });
   }
 
@@ -350,10 +355,12 @@ export class Minecell {
 
   _setElemsType() {
     const { randIdxArr } = this._createRandIdxArr();
+    const { emptyCellsDataArr } = this._getEmptyCellsDataArr(randIdxArr);
 
     this._mineElemsArr = this._getElemsArr(randIdxArr);
-    this._setEmptyCells(randIdxArr);
-    this._openCells()
+    this._emptyCellsDataArr = emptyCellsDataArr;
+
+    this._openCells();
 
     /* remove this */
     this._mineElemsArr.forEach((item) => {
@@ -416,6 +423,7 @@ export class Minecell {
     });
 
     this._resetClassList(this._togglerBtn, this._btnClassName);
+    this._resetCounters();
     this.init();
   }
 
