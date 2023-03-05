@@ -1,8 +1,7 @@
 import { Minecell } from './Minecell';
 
-const wrapperEl = document.querySelector('.minesweeper__wrapper');
 const mineCell = new Minecell({
-  wrapperEl,
+  wrapperSel: '.minesweeper__wrapper',
   btnClassName: 'minesweeper__btn',
   btnSuccessClassName: 'minesweeper__btn_type_success',
   btnFailClassName: 'minesweeper__btn_type_fail',
@@ -10,6 +9,9 @@ const mineCell = new Minecell({
   cellMarkedClassName: 'minesweeper__cell_type_marked',
   cellSpottedClassName: 'minesweeper__cell_type_spotted',
   mineClassName: 'minesweeper__cell_type_mine',
+  counterSel: '.minesweeper__counter',
+  timerSel: '.minesweeper__timer',
+  digitSel: '.minesweeper__digit',
   cellRowLength: 16,
   minesLength: 40
 });
