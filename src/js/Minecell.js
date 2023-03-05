@@ -22,8 +22,8 @@ export class Minecell {
 
     this._emptyCellsDataArr = [];
 
-    this._setActive = this._setActive.bind(this);
-    this._setInitActive = this._setInitActive.bind(this);
+    this._setCellHandled = this._setCellHandled.bind(this);
+    this._setInit = this._setInit.bind(this);
   }
 
   _createEl(data) {
@@ -41,13 +41,17 @@ export class Minecell {
     this._cellElemsArr[idx].classList.add('minesweeper__cell_active');
   }
 
-  _getElemsArr(arr) {
-    return arr.map(item => this._cellElemsArr[item]);
+  _getElem(idx) {
+    return this._cellElemsArr.find(item => item === idx);
   }
 
-  _getDiffElems(arr) {
+  _getElemsArr(idxArr) {
+    return idxArr.map(item => this._cellElemsArr[item]);
+  }
+
+  _getDiffIdxArr(idxArr) {
     return {
-      filtredArr: arr.reduce((acc, item) => {
+      filtredArr: idxArr.reduce((acc, item) => {
         if(acc.find(ind => ind === item)) {
           return acc;
         }
@@ -56,12 +60,12 @@ export class Minecell {
     };
   }
 
-  _getSiblingsIdx(target) {
+  _getSiblingsIdx(targetIdx) {
     const positions = {
-      top: target - this._cellRowLength,
-      right: target + 1,
-      bottom: target + this._cellRowLength,
-      left: target - 1
+      top: targetIdx - this._cellRowLength,
+      right: targetIdx + 1,
+      bottom: targetIdx + this._cellRowLength,
+      left: targetIdx - 1
     };
     const { top, right, bottom } = positions;
 
@@ -69,7 +73,7 @@ export class Minecell {
       isTopSide: !(top >= 0),
       isRightSide: !(right % this._cellRowLength),
       isBottomSide: !(bottom < this._cellsArrLength),
-      isLeftSide: !(target % this._cellRowLength),
+      isLeftSide: !(targetIdx % this._cellRowLength),
     };
     const { isRightSide, isLeftSide } = isSide;
 
@@ -92,36 +96,35 @@ export class Minecell {
       return [0,2].includes(index) ? getSiblings(isSide, index, filtredSiblings([item - 1, item, item + 1])) : getSiblings(isSide, index, item);
     });
 
-    console.log(`is target in arr: `, this._mineElemsArr.includes(target));
     return {
       siblingsIdxArr: sideSiblingsArr.filter(item => item !== null).flat()
     }
   }
 
-  _setEmptyCells(arr) {
-    const emptyCellsArr = this._cellElemsArr.filter((item, index) => !arr.includes(index));
+  _setEmptyCells(randIdxArr) {
+    const emptyCellsArr = this._cellElemsArr.filter((item, index) => !randIdxArr.includes(index));
 
     this._emptyCellsDataArr = emptyCellsArr.map((item) => {
       const emptyCellIdx = this._cellElemsArr.indexOf(item);
       const { siblingsIdxArr } = this._getSiblingsIdx(emptyCellIdx);
       return {
         idx: emptyCellIdx,
-        minesCounter: siblingsIdxArr.filter(item => arr.includes(item)).length,
+        minesCounter: siblingsIdxArr.filter(item => randIdxArr.includes(item)).length,
       };
     });
   }
 
-  _isSiblingsEmpty(target) {
-    const { minesCounter } = this._emptyCellsDataArr.find(item => item.idx === target);
+  _isSiblingsEmpty(targetIdx) {
+    const { minesCounter } = this._emptyCellsDataArr.find(item => item.idx === targetIdx);
     return {
-      targetCounter: minesCounter,
+      targetIdxCounter: minesCounter,
       isSiblingsEmpty: !Boolean(minesCounter)
     };
   }
 
-  _handleCells(target = this._initCellIdx) {
-    const { siblingsIdxArr } = this._getSiblingsIdx(target);
-    const { isSiblingsEmpty, targetCounter } = this._isSiblingsEmpty(target);
+  _handleCells(targetIdx = this._initCellIdx) {
+    const { siblingsIdxArr } = this._getSiblingsIdx(targetIdx);
+    const { isSiblingsEmpty, targetIdxCounter } = this._isSiblingsEmpty(targetIdx);
 
     if(isSiblingsEmpty) {
       const emptyCellsDataArr = siblingsIdxArr.map((item) => {
@@ -132,10 +135,12 @@ export class Minecell {
         const { idx, minesCounter } = item;
         if(minesCounter) {
           this._setStyleParams(idx, minesCounter);
+          //this._getElem(idx).removeEventListener('click', this._setCellHandled);
         }
       });
     } else {
-      this._setStyleParams(target, targetCounter);
+      this._setStyleParams(targetIdx, targetIdxCounter);
+      //this._getElem(targetIdx).removeEventListener('click', this._setCellHandled);
     }
   }
 
@@ -155,17 +160,17 @@ export class Minecell {
 
     console.log(`init index`, this._initCellIdx);
     console.log(`init index in rand arr: `, initCellIdx);
-    const { filtredArr } = this._getDiffElems(idxArr);
+    const { filtredArr } = this._getDiffIdxArr(idxArr);
     return {
-      randidxArr: filtredArr.filter((item, index) => index < this._minesArrLength)
+      randIdxArr: filtredArr.filter((item, index) => index < this._minesArrLength)
     }
   }
 
   _setElemsType() {
-    const { randidxArr } = this._createRandIdxArr();
+    const { randIdxArr } = this._createRandIdxArr();
 
-    this._mineElemsArr = this._getElemsArr(randidxArr);
-    this._setEmptyCells(randidxArr);
+    this._mineElemsArr = this._getElemsArr(randIdxArr);
+    this._setEmptyCells(randIdxArr);
     this._handleCells()
 
     /**/
@@ -174,38 +179,41 @@ export class Minecell {
     });
   }
 
-  _setActive(e) {
+  _setCellHandled(e) {
     const { target } = e;
+    //const isCellEmpty = this._emptyCellsDataArr.find(item => item.idx === currCellIdx);
 
     if(this._mineElemsArr.length) {
       console.log(target);
-      //this._handleCells(target);
-      //target.removeEventListener('click', this._setActive);
+
+      const currCellIdx = this._cellElemsArr.indexOf(target);
+      this._handleCells(currCellIdx);
+      target.removeEventListener('click', this._setCellHandled);
     }
   }
 
-  _setInitActive(e) {
+  _setInit(e) {
     console.log(`isInit before: `, Boolean(this._mineElemsArr.length));
     const { target } = e;
 
     if(!this._mineElemsArr.length) {
       this._initCellIdx = this._cellElemsArr.indexOf(target);
-      target.removeEventListener('click', this._setActive);
+      this._setElemsType();
+      target.removeEventListener('click', this._setCellHandled);
 
       this._cellElemsArr.forEach((item) => {
-        item.removeEventListener('click', this._setInitActive);
+        item.removeEventListener('click', this._setInit);
       });
-      this._setElemsType();
     };
     console.log(`isInit after: `, Boolean(this._mineElemsArr.length));
   }
 
   _setEventListeners(el) {
-    el.addEventListener('click', this._setActive);
+    el.addEventListener('click', this._setCellHandled);
   }
 
   _initEvents(el) {
-    el.addEventListener('click', this._setInitActive);
+    el.addEventListener('click', this._setInit);
   }
 
   init() {
