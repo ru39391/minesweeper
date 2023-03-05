@@ -1,4 +1,6 @@
 :root {
+  --cell-offset-y: 0;
+  --cell-offset-x: 0;
   --digit-offset: 9;
 }
 
@@ -40,11 +42,11 @@
 }
 
 .minesweeper__counter {
-  @extend %d-flex-nowrap
+  @extend %d-flex-nowrap;
 }
 
 .minesweeper__timer {
-
+  @extend %d-flex-nowrap;
 }
 
 .minesweeper__wrapper {
@@ -57,16 +59,12 @@
 .minesweeper__cell {
   @extend %ms-bg;
   height: 17px;
-  background-position: 0 -50px;
+  background-position: calc(-17px*var(--cell-offset-x)) calc(-50px - 17px*var(--cell-offset-y));
 }
 
 .minesweeper__cell_type_mine {
   color: #fff;
   background-color: #f00;
-}
-
-.minesweeper__cell_active {
-  background-position: -17px -50px;
 }
 
 .minesweeper__cell_type_marked {

@@ -43,8 +43,12 @@ export class Minecell {
   }
 
   _setStyleParams(idx, length) {
-    this._cellElemsArr[idx].textContent = length > 0 ? length.toString() : '';
-    this._cellElemsArr[idx].classList.add('minesweeper__cell_active');
+    const offsets = {
+      x: Boolean(length) ? length - 1 : 1,
+      y: Boolean(length) ? 1 : length
+    };
+    const { x, y} = offsets;
+    this._cellElemsArr[idx].style = `--cell-offset-x:${x};--cell-offset-y:${y};`;
   }
 
   _getIdx(el) {
@@ -333,7 +337,6 @@ export class Minecell {
         className: this._cellClassName,
         parentEl: this._wrapperEl
       });
-      //cellEl.textContent = i.toString();
       this._cellElemsArr.push(cellEl);
       this._initEvents(cellEl);
       this._setEventListeners(cellEl);
