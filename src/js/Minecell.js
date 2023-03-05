@@ -22,8 +22,12 @@ export class Minecell {
 
     this._emptyCellsDataArr = [];
 
-    this._setCellHandled = this._setCellHandled.bind(this);
+    this._markedCellsArr = [];
+    this._spottedCellsArr = [];
+
     this._setInit = this._setInit.bind(this);
+    this._setCellOpened = this._setCellOpened.bind(this);
+    this._setCellMarked = this._setCellMarked.bind(this);
   }
 
   _createEl(data) {
@@ -41,8 +45,16 @@ export class Minecell {
     this._cellElemsArr[idx].classList.add('minesweeper__cell_active');
   }
 
+  _getIdx(el) {
+    return this._cellElemsArr.indexOf(el);
+  }
+
+  _getIdxArr(elsArr) {
+    return elsArr.map(item => this._getIdx(item));
+  }
+
   _getElem(idx) {
-    return this._cellElemsArr.find((item, index) => index === idx);
+    return this._cellElemsArr[idx];
   }
 
   _getElemsArr(idxArr) {
@@ -51,7 +63,7 @@ export class Minecell {
 
   _getDiffIdxArr(idxArr) {
     return {
-      filtredArr: idxArr.reduce((acc, item) => {
+      diffIdxArr: idxArr.reduce((acc, item) => {
         if(acc.find(ind => ind === item)) {
           return acc;
         }
@@ -76,9 +88,9 @@ export class Minecell {
 
     console.log(`init index`, this._initCellIdx);
     console.log(`init index in rand arr: `, initCellIdx);
-    const { filtredArr } = this._getDiffIdxArr(idxArr);
+    const { diffIdxArr } = this._getDiffIdxArr(idxArr);
     return {
-      randIdxArr: filtredArr.filter((item, index) => index < this._minesArrLength)
+      randIdxArr: diffIdxArr.filter((item, index) => index < this._minesArrLength)
     }
   }
 
@@ -127,7 +139,7 @@ export class Minecell {
     const emptyCellsArr = this._cellElemsArr.filter((item, index) => !randIdxArr.includes(index));
 
     this._emptyCellsDataArr = emptyCellsArr.map((item) => {
-      const emptyCellIdx = this._cellElemsArr.indexOf(item);
+      const emptyCellIdx = this._getIdx(item);
       const { siblingsIdxArr } = this._getSiblingsIdx(emptyCellIdx);
       return {
         idx: emptyCellIdx,
@@ -144,12 +156,13 @@ export class Minecell {
     };
   }
 
-  _handleCells(targetIdx = this._initCellIdx) {
+  _openCells(targetIdx = this._initCellIdx) {
     const { siblingsIdxArr } = this._getSiblingsIdx(targetIdx);
     const { isSiblingsEmpty, targetIdxCounter } = this._isSiblingsEmpty(targetIdx);
 
     this._setStyleParams(targetIdx, targetIdxCounter);
-    this._getElem(targetIdx).removeEventListener('click', this._setCellHandled);
+    this._getElem(targetIdx).removeEventListener('click', this._setCellOpened);
+    this._getElem(targetIdx).removeEventListener('mousedown', this._setCellMarked);
 
     if(isSiblingsEmpty) {
       const emptyCellsDataArr = siblingsIdxArr.map((item) => {
@@ -159,7 +172,9 @@ export class Minecell {
       emptyCellsDataArr.forEach((item) => {
         const { idx, minesCounter } = item;
         this._setStyleParams(idx, minesCounter);
-        this._getElem(idx).removeEventListener('click', this._setCellHandled);
+
+        this._getElem(idx).removeEventListener('click', this._setCellOpened);
+        this._getElem(idx).removeEventListener('mousedown', this._setCellMarked);
       });
     }
   }
@@ -169,7 +184,7 @@ export class Minecell {
 
     this._mineElemsArr = this._getElemsArr(randIdxArr);
     this._setEmptyCells(randIdxArr);
-    this._handleCells()
+    this._openCells()
 
     /**/
     this._mineElemsArr.forEach((item) => {
@@ -177,15 +192,72 @@ export class Minecell {
     });
   }
 
-  _setCellHandled(e) {
+  _setCellOpened(e) {
     const { target } = e;
 
     if(this._mineElemsArr.length && !this._mineElemsArr.includes(target)) {
-      const currCellIdx = this._cellElemsArr.indexOf(target);
-      this._handleCells(currCellIdx);
+      const currCellIdx = this._getIdx(target);
+      this._openCells(currCellIdx);
       console.log('empty cell');
     } else {
       console.log('mine');
+    }
+  }
+
+  _markCells(e) {
+    const { target } = e;
+    const targetIdx = this._getIdx(target);
+    const checkedCounter = this._markedCellsArr.filter(item => item === target).length;
+    const checkedCellsArr = {
+      markedCellsKey: '_markedCellsArr',
+      spottedCellsKey: '_spottedCellsArr'
+    }
+
+    target.oncontextmenu = () => {
+      return false;
+    };
+
+    switch(checkedCounter) {
+      case 0:
+        console.log(targetIdx, 'установили флажок');
+        this._markedCellsArr.push(target);
+        break;
+
+      case 1:
+        console.log(targetIdx, 'установили вопрос');
+        Object.values(checkedCellsArr).forEach((key) => {
+          this[key].push(target);
+        });
+        break;
+
+      case 2:
+        console.log(targetIdx, 'сняли выделение');
+        Object.values(checkedCellsArr).forEach((key) => {
+          const arr = this[key].map((item) => {
+            return item === target ? null : item;
+          });
+          this[key] = arr.filter(item => item !== null);
+        });
+        break;
+    }
+
+    //console.log(this._getIdxArr(this._markedCellsArr), this._getIdxArr(this._spottedCellsArr), checkedCounter);
+  }
+
+  _setCellMarked(e) {
+    const { button } = e;
+
+    if(this._mineElemsArr.length) {
+      switch(button) {
+        case 0:
+          this._setCellOpened(e);
+          break;
+
+        case 2:
+          this._markCells(e);
+          //console.log('button', button);
+          break;
+      }
     }
   }
 
@@ -194,7 +266,7 @@ export class Minecell {
     const { target } = e;
 
     if(!this._mineElemsArr.length) {
-      this._initCellIdx = this._cellElemsArr.indexOf(target);
+      this._initCellIdx = this._getIdx(target);
       this._setElemsType();
 
       this._cellElemsArr.forEach((item) => {
@@ -205,7 +277,8 @@ export class Minecell {
   }
 
   _setEventListeners(el) {
-    el.addEventListener('click', this._setCellHandled);
+    el.addEventListener('click', this._setCellOpened);
+    el.addEventListener('mousedown', this._setCellMarked);
   }
 
   _initEvents(el) {
