@@ -33,6 +33,10 @@
   @include fw(25px);
   cursor: pointer;
   background-position: -1px -25px;
+
+  &:active {
+    background-position: -28px -25px;
+  }
 }
 
 .minesweeper__btn_type_success {
@@ -82,4 +86,8 @@
 
 .minesweeper__cell_type_spotted {
   background-position: -51px -50px;
+
+  &:active {
+    background-position: -68px -50px;
+  }
 }

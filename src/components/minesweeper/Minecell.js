@@ -32,6 +32,7 @@ export class Minecell {
     this._counterEl = document.querySelector(counterSel);
     this._counterDigitsArr = Array.from(this._counterEl.querySelectorAll(this._digitSel));
 
+    this._isTimerStopped = false;
     this._timerEl = document.querySelector(timerSel);
     this._timerDigitsArr = Array.from(this._timerEl.querySelectorAll(this._digitSel));
 
@@ -225,6 +226,7 @@ export class Minecell {
     const { diffItemsArr } = this._getDiffItemsArr(this._emptyCellsArr);
 
     if(diffItemsArr.length === this._emptyCellsCounter) {
+      this._isTimerStopped = true;
       this._togglerBtn.classList.add(this._btnSuccessClassName);
       this._mineElemsArr.forEach((item) => {
         this._unsetEventListeners(item);
@@ -243,7 +245,9 @@ export class Minecell {
       }
     });
 
+    this._resetClassList(elem);
     this._setStyleParams(idx, 7, true);
+
     markedMinesArr.splice(currElIdx, 1);
     markedMinesArr.forEach((item) => {
       const { el, isMarked } = item;
@@ -257,6 +261,7 @@ export class Minecell {
       this._unsetEventListeners(item);
     });
 
+    this._isTimerStopped = true;
     this._togglerBtn.classList.add(this._btnFailClassName);
   }
 
@@ -264,7 +269,7 @@ export class Minecell {
     const { target } = e;
     const currCellIdx = this._getIdx(target);
 
-    if(this._mineElemsArr.length && !this._mineElemsArr.includes(target)) {
+    if(this._mineElemsArr.length && !this._mineElemsArr.includes(target)) { // this.
       this._openCells(currCellIdx);
       this._success();
     } else {
@@ -312,12 +317,17 @@ export class Minecell {
   }
 
   _resetCounters() {
+    this._isTimerStopped = true;
     this._counterDigitsArr.concat(this._timerDigitsArr).forEach((item) => {
-      item.removeAttribute('style');
+      setTimeout(() => {
+        item.removeAttribute('style');
+      }, 1000);
     });
   }
 
-  _setDigits(digitWrappersArr, digitsArr) {
+  _setDigits(digitWrappersArr, value) {
+    const digitsArr = value.toString().split('');
+
     while (digitsArr.length < digitWrappersArr.length) {
       digitsArr.unshift('0');
     }
@@ -331,9 +341,18 @@ export class Minecell {
 
   _countMines() {
     const { diffItemsArr } = this._getDiffItemsArr(this._markedCellsArr);
-    const digitsArr = diffItemsArr.length.toString().split('');
+    this._setDigits(this._counterDigitsArr, diffItemsArr.length);
+  }
 
-    this._setDigits(this._counterDigitsArr, digitsArr);
+  _initTimer() {
+    this._isTimerStopped = false;
+    let i = 0;
+    const timer = setInterval(() => {
+      this._setDigits(this._timerDigitsArr, i++);
+      if(this._isTimerStopped) {
+        clearInterval(timer);
+      }
+    }, 1000);
   }
 
   _setCellMarked(e) {
@@ -374,6 +393,7 @@ export class Minecell {
     if(!this._mineElemsArr.length) {
       this._initCellIdx = this._getIdx(target);
       this._setElemsType();
+      this._initTimer();
 
       this._cellElemsArr.forEach((item) => {
         item.removeEventListener('click', this._setInit);
@@ -416,14 +436,12 @@ export class Minecell {
       item.remove();
       item = null;
     });
-
-    this._initCellIdx = null;
     Object.values(keysData).forEach((key) => {
       this[key] = [];
     });
-
-    this._resetClassList(this._togglerBtn, this._btnClassName);
+    this._initCellIdx = null;
     this._resetCounters();
+    this._resetClassList(this._togglerBtn, this._btnClassName);
     this.init();
   }
 
