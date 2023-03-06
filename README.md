@@ -12,6 +12,8 @@
 - development mode **npm run dev**
 - production mode **npm run build**
 
+<!--
 ## Доступные методы:
 
 Добавить описание методов
+-->

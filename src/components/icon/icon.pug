@@ -1,5 +1,0 @@
-mixin icon(options = {})
-  - const { className = 'icon-fluid', icon = 'webpack' } = options;
-
-  svg(class=className)
-    use(xlink:href=`img/icons/icons.svg#icon-${icon}`)
