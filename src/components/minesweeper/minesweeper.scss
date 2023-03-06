@@ -39,6 +39,10 @@
   }
 }
 
+.minesweeper__btn_type_warning {
+  background-position: -55px -25px;
+}
+
 .minesweeper__btn_type_success {
   background-position: -82px -25px;
 }
@@ -71,6 +75,7 @@
 
 .minesweeper__cell {
   @extend %ms-bg;
+  @extend %btn-default;
   height: 17px;
   background-position: calc(-17px*var(--cell-offset-x)) calc(-50px - 17px*var(--cell-offset-y));
 }

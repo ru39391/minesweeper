@@ -5,6 +5,7 @@ const mineCell = new Minecell({
   btnClassName: 'minesweeper__btn',
   btnSuccessClassName: 'minesweeper__btn_type_success',
   btnFailClassName: 'minesweeper__btn_type_fail',
+  btnWarningClassName: 'minesweeper__btn_type_warning',
   cellClassName: 'minesweeper__cell',
   cellMarkedClassName: 'minesweeper__cell_type_marked',
   cellSpottedClassName: 'minesweeper__cell_type_spotted',
